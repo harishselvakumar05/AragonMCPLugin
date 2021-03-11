@@ -1,5 +1,5 @@
 # AragonMCPLugin
-A version of Hunger Games written by harishlikespi and KazooKidFTW for our custom map of our highschool
+A version of Hunger Games written by (mostly) harishlikespi and KazooKidFTW (not really) for our custom map of our highschool
 
 
 # Usage
