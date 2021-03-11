@@ -9,16 +9,20 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class main extends JavaPlugin {
 
 	
-    @Override
-    public void onEnable() {  
-    	getServer().getPluginManager().registerEvents(new MatchCommands(this), this);
-    	getCommand("startmatch").setExecutor(new MatchCommands(this));    	
-    	for(Player player : Bukkit.getOnlinePlayers()) {
-    		player.getInventory().clear();
-    	//	player.setGameMode(GameMode.ADVENTURE);  		
-    	}
-      	getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "enabled"); 
-    }
+	@Override
+	public void onEnable() {  
+		getServer().getPluginManager().registerEvents(new MatchCommands(this), this);
+		getCommand("startmatch").setExecutor(new MatchCommands(this));
+		if(!Bukkit.getOnlinePlayers().isEmpty()) {
+			for(Player player : Bukkit.getOnlinePlayers()) {
+				player.getInventory().clear();
+				//	player.setGameMode(GameMode.ADVENTURE);
+				MatchCommands.createBoard(player);
+			}
+		}
+		getServer().getConsoleSender().sendMessage(ChatColor.GREEN + "enabled"); 
+	}
+
     
 
  
