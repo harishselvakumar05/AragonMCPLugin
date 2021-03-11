@@ -846,7 +846,6 @@ public class MatchCommands implements CommandExecutor, Listener{
 		chests.add(chest30);
 
 		Collections.shuffle(chests);
-		player .sendMessage(chest1.toString());
 		for(Location location : chests) {
 			location.getBlock().setType(Material.CHEST);
 		}	
