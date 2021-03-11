@@ -1,5 +1,5 @@
 package com.test.selvakumar;
-//Harishisgay -nice
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -173,7 +173,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 	public static ArrayList<Player> playersAlive = new ArrayList<>();
 	static ArrayList<Item> playerInventory = new ArrayList<>();
 	
-	/*
+	
 	Team solo1;
 	Team solo2;
 	Team solo3;
@@ -186,7 +186,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 	Team solo10;
 	
 	ArrayList<Team> soloTeams = new ArrayList<>();
-	*/
+	
 	public MatchCommands(main main) {
 		MatchCommands.main = main;
 	}
@@ -197,13 +197,15 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 	@EventHandler
-	public static void onPlayerJoin(PlayerJoinEvent event) {		
+	public void onPlayerJoin(PlayerJoinEvent event) {		
 		Player player =  event.getPlayer();	
 		player.sendTitle(ChatColor.translateAlternateColorCodes('&', "&4Welcome to Aragon!"), ChatColor.translateAlternateColorCodes('&', "&fThe happiest place on Earth") , 0, 60, 10);
 		if(startGame) {
 			player.setGameMode(GameMode.SPECTATOR);
 		}
+		createBoard(player);
 	}
+
 
 
 
@@ -411,7 +413,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 	}
 
 
-/*
+
 	public void initializeSoloTeams() {		
 		soloTeams.add(solo1);
 		soloTeams.add(solo2);
@@ -423,7 +425,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 		soloTeams.add(solo9);
 		soloTeams.add(solo10);		
 	}
-*/
+
 
 
 	public void stunPlayers() {
@@ -491,13 +493,19 @@ public class MatchCommands implements CommandExecutor, Listener{
 	
 	
 	
-	/*
-	public void createBoard(Player player) {
+	public static void createBoard(Player player) {
 		ScoreboardManager manager = Bukkit.getScoreboardManager();
 		Scoreboard board = manager.getNewScoreboard();
 		Objective objective = board.registerNewObjective("MatchCommands-1","dummy", ChatColor.translateAlternateColorCodes('&', "&a&l<< &2&lKill Leaders &a&l>>") );
 		objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-	}*/
+		Score score = objective.getScore(ChatColor.BLUE + "=-=-=-=-=-=-=-=");
+		score.setScore(4);
+		Score score2 = objective.getScore(ChatColor.BLUE + "=-=-=-=-=-=-=-=");
+		score2.setScore(3);
+		Score score3 = objective.getScore(ChatColor.BLUE + "=-=-=-=-=-=-=-=");
+		score3.setScore(2);
+		player.setScoreboard(board);
+	}
 	
 	public static void sendServerTitle(String string, int duration, int color) {
 		for(Player player : Bukkit.getOnlinePlayers()) {
