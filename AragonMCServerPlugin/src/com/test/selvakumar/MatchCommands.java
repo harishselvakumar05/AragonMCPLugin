@@ -2,6 +2,7 @@ package com.test.selvakumar;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 import org.bukkit.Bukkit;
@@ -22,6 +23,7 @@ import org.bukkit.boss.BarColor;
 import org.bukkit.boss.BarStyle;
 import org.bukkit.boss.BossBar;
 import org.bukkit.command.*;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
@@ -30,11 +32,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.entity.ItemSpawnEvent;
-import org.bukkit.event.player.PlayerGameModeChangeEvent;
+import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -45,6 +49,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.scoreboard.Team;
@@ -172,7 +177,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 	ArrayList<SpawnPosition> positions = new ArrayList<>();
 	public static ArrayList<Player> playersAlive = new ArrayList<>();
 	static ArrayList<Item> playerInventory = new ArrayList<>();
-	
+	public static ArrayList<BoardPlayer> LeaderBoardPlayers = new ArrayList<>();
 	
 	Team solo1;
 	Team solo2;
@@ -197,21 +202,36 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 	@EventHandler
-	public void onPlayerJoin(PlayerJoinEvent event) {		
+	public static void onPlayerJoin(PlayerJoinEvent event) {		
 		Player player =  event.getPlayer();	
 		player.sendTitle(ChatColor.translateAlternateColorCodes('&', "&4Welcome to Aragon!"), ChatColor.translateAlternateColorCodes('&', "&fThe happiest place on Earth") , 0, 60, 10);
 		if(startGame) {
 			player.setGameMode(GameMode.SPECTATOR);
-		}
+		}		
+		BoardPlayer boardplayer = new BoardPlayer(player, 0);
+		MatchCommands.LeaderBoardPlayers.add(boardplayer);	
 		createBoard(player);
+		refreshBoard();
+	}
+	
+	
+	@EventHandler
+	public static void onPlayerLeave(PlayerQuitEvent event) {
+		LeaderBoardPlayers.trimToSize();
+		
+		for (Iterator<BoardPlayer> itr = LeaderBoardPlayers.iterator(); itr.hasNext();) {
+			BoardPlayer next = itr.next();			
+			if (next.getPlayer().getDisplayName().equals(event.getPlayer().getDisplayName())){
+				itr.remove();
+			}					
+		}
+		refreshBoard();
 	}
 
 
 
 
-
-
-
+	
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -234,6 +254,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 					chooseCenter();
 					cycle_one();
 					startBossBar();
+					refreshBoard();
 					stunPlayers();			
 					addPlayer();
 					initializeCarePackages();
@@ -493,19 +514,22 @@ public class MatchCommands implements CommandExecutor, Listener{
 	
 	
 	
+	
 	public static void createBoard(Player player) {
 		ScoreboardManager manager = Bukkit.getScoreboardManager();
 		Scoreboard board = manager.getNewScoreboard();
 		Objective objective = board.registerNewObjective("MatchCommands-1","dummy", ChatColor.translateAlternateColorCodes('&', "&a&l<< &2&lKill Leaders &a&l>>") );
-		objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-		Score score = objective.getScore(ChatColor.BLUE + "=-=-=-=-=-=-=-=");
-		score.setScore(4);
-		Score score2 = objective.getScore(ChatColor.BLUE + "=-=-=-=-=-=-=-=");
-		score2.setScore(3);
-		Score score3 = objective.getScore(ChatColor.BLUE + "=-=-=-=-=-=-=-=");
-		score3.setScore(2);
-		player.setScoreboard(board);
+		objective.setDisplaySlot(DisplaySlot.SIDEBAR);		
+		 for(BoardPlayer player1 : LeaderBoardPlayers) {
+			 Score score1 = objective.getScore(ChatColor.GOLD + player1.getPlayer().getDisplayName());
+			 score1.setScore(player1.getScore());
+			 
+		 }
+		 player.setScoreboard(board);
 	}
+	
+	
+	
 	
 	public static void sendServerTitle(String string, int duration, int color) {
 		for(Player player : Bukkit.getOnlinePlayers()) {
@@ -709,26 +733,93 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 	@EventHandler
 	public void onDamage(EntityDamageEvent event) {	
-		if(getStartGame()){
-			if(event.getEntity() instanceof Player) {
-				if(event instanceof EntityDamageByEntityEvent) {
-					event = (EntityDamageByEntityEvent) event;					
-					Player player = (Player) event.getEntity();
+		//if(getStartGame()){	
+
+			
+			if (event instanceof EntityDamageByEntityEvent) {
+				
+				
+				Player player = (Player) event.getEntity();
+				event = (EntityDamageByEntityEvent) event;
+				
+				
+				if(event.getCause() == DamageCause.ENTITY_ATTACK || event.getCause() == DamageCause.ENTITY_SWEEP_ATTACK) {
+
+					Player p = (Player) ((EntityDamageByEntityEvent) event).getDamager();
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						event.setCancelled(true);						
+						
 						setPlayersLeft(getPlayersLeft() - 1);
-						playersAlive.remove(player);
-						if(getPlayersLeft() == 1) {
-							sendServermessage("Looks like " + playersAlive.get(0).getDisplayName() + " won this time!");
-							playersAlive.get(0).sendTitle(ChatColor.translateAlternateColorCodes('&', "&6You Are The Champion"), "good work I guess", 0, 300, 0);
-							initiateExit();
-						}						
-						player.setGameMode(GameMode.SPECTATOR);
-						createDeathBox(player, player.getLocation());						
-					}	
+						killPlayer(player);
+						event.setCancelled(true);					
+						MatchCommands.player.sendMessage(ChatColor.BLUE + player.getDisplayName() + " was hacked to oblivion by " + ChatColor.RED + p.getDisplayName());					
+					
+					}
+
+
+				} else if(event.getCause() == DamageCause.PROJECTILE){
+
+					Arrow projectile = (Arrow)  ((EntityDamageByEntityEvent) event).getDamager();
+					Player p = (Player) projectile.getShooter();
+
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+						
+						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
+						event.setCancelled(true);					
+						MatchCommands.player.sendMessage(ChatColor.BLUE + player.getDisplayName() + " witnessed the good aim of " + ChatColor.RED + p.getDisplayName());										
+					}					
 				}
 			}
+			
+			
+			Player player = (Player) event.getEntity();	
+			
+
+			if ((player.getHealth() - event.getFinalDamage()) <= 0) {												
+				setPlayersLeft(getPlayersLeft() - 1);
+				killPlayer(player);
+				event.setCancelled(true);
+				//sendServermessage(ChatColor.RED + killer.getDisplayName() + " killed " + ChatColor.BLUE + player.getDisplayName());																								
+			}																		
+		//}
+	}
+
+
+	public void killPlayer(Player player) {
+		player.setGameMode(GameMode.SPECTATOR);
+		
+		for(BoardPlayer player1 : LeaderBoardPlayers) {
+			if(player1.getPlayer().getDisplayName().equals(player.getDisplayName())) {
+				player1.incrementScore();	
+				refreshBoard();
+			}
+			playersAlive.remove(player);
+			createDeathBox(player, player.getLocation());		
 		}
+		
+		
+		
+		if(getPlayersLeft() == 1) {
+			sendServermessage("Looks like " + playersAlive.get(0).getDisplayName() + " won this time!");
+			playersAlive.get(0).sendTitle(ChatColor.translateAlternateColorCodes('&', "&6You Are The Champion"), "good work I guess", 0, 300, 0);					
+			initiateExit();
+		}
+	}
+
+	public static void refreshBoard(){
+		for(BoardPlayer p : LeaderBoardPlayers) {
+			createBoard(p.getPlayer());
+		}
+	}
+
+	@EventHandler
+	public void onProjectileHit(ProjectileHitEvent event) {
+		
+		if(event.getHitEntity() instanceof Player) {
+			if(event.getEntity() instanceof Arrow) {
+				
+			}
+		}		
 	}
 
 
@@ -736,9 +827,10 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 
-
-
-	public static void createDeathBox(Player player, Location location) {
+	public static boolean createDeathBox(Player player, Location location) {
+		
+		if(!playersAlive.contains(player)) return true;
+		
 		Block block = location.getBlock();
 		block.setType(Material.CHEST);	
 
@@ -753,6 +845,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 					chest.getInventory().addItem(itemstack[x]);								
 			}			                                
 		}
+		return true;
 	}
 
 
@@ -875,6 +968,12 @@ public class MatchCommands implements CommandExecutor, Listener{
 		main.onDisable();		
 	}
 
+	
+	
+	
+	
+	
+	
 	public static void clearChests() {
 		for (Chunk c : world.getLoadedChunks()) {
 			for (BlockState b : c.getTileEntities()) {				
@@ -1211,7 +1310,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 				if (b instanceof Chest) {
 					Chest chest = (Chest) b;
 					Inventory inventory = chest.getBlockInventory();   
-					Material[] randomItens = {Material.AIR, Material.APPLE, Material.ENDER_PEARL, Material.STONE_SWORD, Material.WOODEN_AXE, Material.GOLDEN_APPLE, Material.ARROW, Material.BOW };
+					Material[] randomItens = {Material.AIR, Material.APPLE, Material.ENDER_PEARL, Material.STONE_SWORD, Material.WOODEN_AXE, Material.ARROW, Material.BOW };
 
 					for (int i = 0; i < chest.getInventory().getSize(); i++) {
 						Random rand = new Random();
