@@ -27,12 +27,15 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityEvent;
+import org.bukkit.event.entity.FireworkExplodeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -178,7 +181,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 	public static ArrayList<Player> playersAlive = new ArrayList<>();
 	static ArrayList<Item> playerInventory = new ArrayList<>();
 	public static ArrayList<BoardPlayer> LeaderBoardPlayers = new ArrayList<>();
-	
+
 	Team solo1;
 	Team solo2;
 	Team solo3;
@@ -189,9 +192,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 	Team solo8;
 	Team solo9;
 	Team solo10;
-	
+
 	ArrayList<Team> soloTeams = new ArrayList<>();
-	
+
 	public MatchCommands(main main) {
 		MatchCommands.main = main;
 	}
@@ -213,12 +216,12 @@ public class MatchCommands implements CommandExecutor, Listener{
 		createBoard(player);
 		refreshBoard();
 	}
-	
-	
+
+
 	@EventHandler
 	public static void onPlayerLeave(PlayerQuitEvent event) {
 		LeaderBoardPlayers.trimToSize();
-		
+
 		for (Iterator<BoardPlayer> itr = LeaderBoardPlayers.iterator(); itr.hasNext();) {
 			BoardPlayer next = itr.next();			
 			if (next.getPlayer().getDisplayName().equals(event.getPlayer().getDisplayName())){
@@ -231,7 +234,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 
-	
+
 
 	@Override
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
@@ -242,25 +245,30 @@ public class MatchCommands implements CommandExecutor, Listener{
 		world = player.getWorld();
 		border =  player.getWorld().getWorldBorder();				
 		if (cmd.getName().equalsIgnoreCase("startmatch")) {
-			if (!(player.getDisplayName().equals("DaddyThanosTHICC"))) return true;			
-			initializeMatch();
-			new BukkitRunnable() {				
-				@Override 
-				public void run() {						
-					setStart(false);
-					chooseSpawnPosition();
-					createChests();
-					fillChests();	
-					chooseCenter();
-					cycle_one();
-					startBossBar();
-					refreshBoard();
-					stunPlayers();			
-					addPlayer();
-					initializeCarePackages();
-				}
-			}.runTaskLater(main, 20*5);		
-			return true;
+			if ( ((player.getDisplayName().equals("DaddyThanosTHICC"))) || ((player.getDisplayName().equals("NinoTheBaker")))) {
+
+
+				initializeMatch();
+				new BukkitRunnable() {				
+					@Override 
+					public void run() {						
+						setStart(false);
+						chooseSpawnPosition();
+						createChests();
+						fillChests();	
+						chooseCenter();
+						cycle_one();
+						startBossBar();
+						refreshBoard();
+						stunPlayers();			
+						addPlayer();
+						initializeCarePackages();
+					}
+				}.runTaskLater(main, 20*5);		
+				return true;
+			} else {
+				return true;
+			}
 		}
 		return true;
 	}
@@ -389,10 +397,8 @@ public class MatchCommands implements CommandExecutor, Listener{
 					bar.setTitle("Final Round Closing");
 					break;					
 				}
-				//setBarTimeInterval(20);
 				progress = progress - time;
 				if ( progress <= 0) {
-					//setBarTimeInterval(0);
 					count++;
 					bar.setProgress(1.0);
 					progress = 1.0;
@@ -511,26 +517,26 @@ public class MatchCommands implements CommandExecutor, Listener{
 		}
 	}
 
-	
-	
-	
-	
+
+
+
+
+
 	public static void createBoard(Player player) {
 		ScoreboardManager manager = Bukkit.getScoreboardManager();
 		Scoreboard board = manager.getNewScoreboard();
 		Objective objective = board.registerNewObjective("MatchCommands-1","dummy", ChatColor.translateAlternateColorCodes('&', "&a&l<< &2&lKill Leaders &a&l>>") );
-		objective.setDisplaySlot(DisplaySlot.SIDEBAR);		
-		 for(BoardPlayer player1 : LeaderBoardPlayers) {
-			 Score score1 = objective.getScore(ChatColor.GOLD + player1.getPlayer().getDisplayName());
-			 score1.setScore(player1.getScore());
-			 
-		 }
-		 player.setScoreboard(board);
+		objective.setDisplaySlot(DisplaySlot.SIDEBAR);	
+		for(BoardPlayer player1 : LeaderBoardPlayers) {			 			 
+			Score score1 = objective.getScore(ChatColor.GOLD + player1.getPlayer().getDisplayName());
+			score1.setScore(player1.getScore());		 
+		}
+		player.setScoreboard(board);
 	}
-	
-	
-	
-	
+
+
+
+
 	public static void sendServerTitle(String string, int duration, int color) {
 		for(Player player : Bukkit.getOnlinePlayers()) {
 
@@ -618,7 +624,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 
-	
+
 	public void chooseSpawnPosition() {
 		p1 = new SpawnPosition(world, -85, 25, 35, true);
 		p2 = new SpawnPosition(world, 39, 16, -27, true);
@@ -630,7 +636,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 		p8 = new SpawnPosition(world, 43, 10, -107, true);
 		p9 = new SpawnPosition(world, 0, 69, 0, true);
 		p10 = new SpawnPosition(world, 0, 69, 0, false);	
-		 
+
 		positions.add(p1);
 		positions.add(p2);
 		positions.add(p3);
@@ -733,78 +739,115 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 	@EventHandler
 	public void onDamage(EntityDamageEvent event) {	
-		//if(getStartGame()){	
+		//if(getStartGame()){				
+		if (event instanceof EntityDamageByEntityEvent) {							
+			Player player = (Player) event.getEntity();
+			event = (EntityDamageByEntityEvent) event;
 
-			
-			if (event instanceof EntityDamageByEntityEvent) {
-				
-				
-				Player player = (Player) event.getEntity();
-				event = (EntityDamageByEntityEvent) event;
-				
-				
-				if(event.getCause() == DamageCause.ENTITY_ATTACK || event.getCause() == DamageCause.ENTITY_SWEEP_ATTACK) {
+			if(event.getCause() == DamageCause.ENTITY_ATTACK || event.getCause() == DamageCause.ENTITY_SWEEP_ATTACK) {
 
-					Player p = (Player) ((EntityDamageByEntityEvent) event).getDamager();
-					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						
-						setPlayersLeft(getPlayersLeft() - 1);
-						killPlayer(player);
-						event.setCancelled(true);					
-						MatchCommands.player.sendMessage(ChatColor.BLUE + player.getDisplayName() + " was hacked to oblivion by " + ChatColor.RED + p.getDisplayName());					
-					
+				Player p = (Player) ((EntityDamageByEntityEvent) event).getDamager();
+				if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+
+					setPlayersLeft(getPlayersLeft() - 1);
+					killPlayer(player);
+					for(BoardPlayer player1 : LeaderBoardPlayers) {
+						if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
+							player1.incrementScore();	
+							refreshBoard();
+						}
 					}
+					event.setCancelled(true);					
+					sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE +  " was hacked to oblivion by " + ChatColor.DARK_RED + p.getDisplayName());					
 
-
-				} else if(event.getCause() == DamageCause.PROJECTILE){
-
-					Arrow projectile = (Arrow)  ((EntityDamageByEntityEvent) event).getDamager();
-					Player p = (Player) projectile.getShooter();
-
-					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						
-						setPlayersLeft(getPlayersLeft() - 1);
-						killPlayer(player);
-						event.setCancelled(true);					
-						MatchCommands.player.sendMessage(ChatColor.BLUE + player.getDisplayName() + " witnessed the good aim of " + ChatColor.RED + p.getDisplayName());										
-					}					
 				}
-			}
-			
-			
+			} else if(event.getCause() == DamageCause.PROJECTILE) {	
+
+				Arrow projectile = (Arrow)  ((EntityDamageByEntityEvent) event).getDamager();
+				Player p = (Player) projectile.getShooter();
+
+				if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+
+					setPlayersLeft(getPlayersLeft() - 1);
+
+
+					for(BoardPlayer player1 : LeaderBoardPlayers) {
+						if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
+							player1.incrementScore();	
+							refreshBoard();
+						}
+					}
+					event.setCancelled(true);											
+					sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " witnessed the good aim of " + ChatColor.DARK_RED + p.getDisplayName());										
+					killPlayer(player);
+				}					
+			} else if(event.getCause() == DamageCause.ENTITY_EXPLOSION) {
+				event.setCancelled(true);					
+			}				
+		}
+
+		/*
 			Player player = (Player) event.getEntity();	
-			
+
 
 			if ((player.getHealth() - event.getFinalDamage()) <= 0) {												
 				setPlayersLeft(getPlayersLeft() - 1);
+				sendServermessage("WORKD");
 				killPlayer(player);
 				event.setCancelled(true);
-				//sendServermessage(ChatColor.RED + killer.getDisplayName() + " killed " + ChatColor.BLUE + player.getDisplayName());																								
-			}																		
+
+
+			}*/																		
 		//}
 	}
+
+	@EventHandler
+	public void onFireworkExplode(FireworkExplodeEvent event) {
+		Location location = event.getEntity().getLocation();
+		Player p = (Player) event.getEntity().getShooter();		
+		for(Player player : playersAlive) {
+			double location2 = location.distance(player.getLocation());
+			if(location2 <= 5) {
+				Random randomGenerator = new Random();
+				double rd = 2 * (2.5 + randomGenerator.nextDouble());			
+				if ((player.getHealth() - rd) <= 0) {
+
+					for(BoardPlayer player1 : LeaderBoardPlayers) {
+						if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
+							player1.incrementScore();	
+							sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " was blasted by " + ChatColor.DARK_RED + p.getDisplayName());
+							refreshBoard();
+						}
+					}					
+					setPlayersLeft(getPlayersLeft() - 1);					
+					killPlayer(player);					
+				} else { 
+					player.setHealth(player.getHealth() - rd);					
+				}	
+			}
+		}			
+	}
+
+
 
 
 	public void killPlayer(Player player) {
 		player.setGameMode(GameMode.SPECTATOR);
-		
-		for(BoardPlayer player1 : LeaderBoardPlayers) {
-			if(player1.getPlayer().getDisplayName().equals(player.getDisplayName())) {
-				player1.incrementScore();	
-				refreshBoard();
-			}
-			playersAlive.remove(player);
-			createDeathBox(player, player.getLocation());		
-		}
-		
-		
-		
+
+		playersAlive.remove(player);
+		createDeathBox(player, player.getLocation());						
+
+
 		if(getPlayersLeft() == 1) {
 			sendServermessage("Looks like " + playersAlive.get(0).getDisplayName() + " won this time!");
 			playersAlive.get(0).sendTitle(ChatColor.translateAlternateColorCodes('&', "&6You Are The Champion"), "good work I guess", 0, 300, 0);					
 			initiateExit();
 		}
 	}
+
+
+
+
 
 	public static void refreshBoard(){
 		for(BoardPlayer p : LeaderBoardPlayers) {
@@ -814,10 +857,10 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 	@EventHandler
 	public void onProjectileHit(ProjectileHitEvent event) {
-		
+
 		if(event.getHitEntity() instanceof Player) {
 			if(event.getEntity() instanceof Arrow) {
-				
+
 			}
 		}		
 	}
@@ -828,9 +871,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 	public static boolean createDeathBox(Player player, Location location) {
-		
+
 		if(!playersAlive.contains(player)) return true;
-		
+
 		Block block = location.getBlock();
 		block.setType(Material.CHEST);	
 
@@ -968,12 +1011,12 @@ public class MatchCommands implements CommandExecutor, Listener{
 		main.onDisable();		
 	}
 
-	
-	
-	
-	
-	
-	
+
+
+
+
+
+
 	public static void clearChests() {
 		for (Chunk c : world.getLoadedChunks()) {
 			for (BlockState b : c.getTileEntities()) {				
@@ -1323,8 +1366,8 @@ public class MatchCommands implements CommandExecutor, Listener{
 			}
 		}
 	}
-	
-	
+
+
 
 
 
@@ -1370,9 +1413,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 			event.setCancelled(true);
 		}
 	}
-	
-	
-	
+
+
+
 
 
 
@@ -1386,9 +1429,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 		else border.setSize(x,time);		
 		border.setDamageAmount(damage);	
 	}
-	
-	
-	
+
+
+
 
 
 
@@ -1481,7 +1524,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 
-	
+
 	public int getTaskID() {
 		return taskID;
 	}
