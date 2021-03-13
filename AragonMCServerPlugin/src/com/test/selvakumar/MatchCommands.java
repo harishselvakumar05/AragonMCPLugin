@@ -246,9 +246,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 		world = player.getWorld();
 		border =  player.getWorld().getWorldBorder();				
 		if (cmd.getName().equalsIgnoreCase("startmatch")) {
-			if ( ((player.getDisplayName().equals("DaddyThanosTHICC"))) || ((player.getDisplayName().equals("NinoTheBaker")))) {
-
-
+			if ( ((player.getDisplayName().equals("DaddyThanosTHICC"))) || ((player.getDisplayName().equals("NinoTheBaker"))) || ((player.getDisplayName().equals("KazooKidFTW")))) {
 				initializeMatch();
 				new BukkitRunnable() {				
 					@Override 
@@ -774,9 +772,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 					Player p = (Player) ((EntityDamageByEntityEvent) event).getDamager();
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-
-						setPlayersLeft(getPlayersLeft() - 1);
 						killPlayer(player);
+						setPlayersLeft(getPlayersLeft() - 1);
+						
 						for(BoardPlayer player1 : LeaderBoardPlayers) {
 							if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
 								player1.incrementScore();	
@@ -797,10 +795,8 @@ public class MatchCommands implements CommandExecutor, Listener{
 					Player p = (Player) projectile.getShooter();
 
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-
+						killPlayer(player);
 						setPlayersLeft(getPlayersLeft() - 1);
-
-
 						for(BoardPlayer player1 : LeaderBoardPlayers) {
 							if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
 								player1.incrementScore();	
@@ -809,7 +805,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 						}
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " witnessed the good aim of " + ChatColor.DARK_RED + p.getDisplayName());										
-						killPlayer(player);
+						
 					}
 					
 					
@@ -822,22 +818,22 @@ public class MatchCommands implements CommandExecutor, Listener{
 				} else if(event.getCause() == DamageCause.FALL) {
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						
+						killPlayer(player);
 						setPlayersLeft(getPlayersLeft() - 1);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " forgot they couldn't fly ");										
-						killPlayer(player);
+						
 						
 					}
 					
 				} else if(event.getCause() == DamageCause.DROWNING) {
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						
+						killPlayer(player);
 						setPlayersLeft(getPlayersLeft() - 1);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " swam for too long ");										
-						killPlayer(player);
+						
 						
 					}
 					
@@ -845,11 +841,11 @@ public class MatchCommands implements CommandExecutor, Listener{
 					
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						
+						killPlayer(player);
 						setPlayersLeft(getPlayersLeft() - 1);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " had a bad diet ");										
-						killPlayer(player);
+						
 						
 					}
 					
@@ -857,11 +853,11 @@ public class MatchCommands implements CommandExecutor, Listener{
 					
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						
+						killPlayer(player);
 						setPlayersLeft(getPlayersLeft() - 1);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " was grilled ");										
-						killPlayer(player);
+						
 						
 					}
 					
@@ -870,44 +866,24 @@ public class MatchCommands implements CommandExecutor, Listener{
 					
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						
+						killPlayer(player);
 						setPlayersLeft(getPlayersLeft() - 1);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " drank some spicy lava ");										
-						killPlayer(player);
+						
 						
 					}
 				} else if(event.getCause() == DamageCause.SUFFOCATION) {
 					
 			
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						
+						killPlayer(player);
 						setPlayersLeft(getPlayersLeft() - 1);
 						event.setCancelled(true);											
-						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " died to the " + ChatColor.DARK_RED + "The Storm");										
-						killPlayer(player);
-						
-					}
-					
-				}
-				
-				
-			
-		}
-		
-		/*
-			Player player = (Player) event.getEntity();	
-
-
-			if ((player.getHealth() - event.getFinalDamage()) <= 0) {												
-				setPlayersLeft(getPlayersLeft() - 1);
-				sendServermessage("WORKD");
-				killPlayer(player);
-				event.setCancelled(true);
-
-
-			}*/																		
-		//}
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " died to the " + ChatColor.DARK_RED + "The Storm");																						
+					}					
+				}			
+		}		
 	}
 
 	@EventHandler
@@ -942,9 +918,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 	public void killPlayer(Player player) {
 		player.setGameMode(GameMode.SPECTATOR);
-
+		createDeathBox(player, player.getLocation());
 		playersAlive.remove(player);
-		createDeathBox(player, player.getLocation());						
+								
 
 
 		if(getPlayersLeft() == 1) {
@@ -994,8 +970,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 		if(location.getBlock().getState() instanceof Chest) {
 			for(int x = 9; x < 35; x++) {
 				if(itemstack[x] != null)
-					chest.getInventory().addItem(itemstack[x]);		
-				
+					chest.getInventory().addItem(itemstack[x]);						
 			}			                                
 		}
 		return true;
