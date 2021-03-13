@@ -772,9 +772,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 					Player p = (Player) ((EntityDamageByEntityEvent) event).getDamager();
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						killPlayer(player);
-						setPlayersLeft(getPlayersLeft() - 1);
 						
+						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
 						for(BoardPlayer player1 : LeaderBoardPlayers) {
 							if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
 								player1.incrementScore();	
@@ -795,8 +795,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 					Player p = (Player) projectile.getShooter();
 
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						killPlayer(player);
+						
 						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
 						for(BoardPlayer player1 : LeaderBoardPlayers) {
 							if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
 								player1.incrementScore();	
@@ -818,8 +819,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 				} else if(event.getCause() == DamageCause.FALL) {
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						killPlayer(player);
+						
 						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " forgot they couldn't fly ");										
 						
@@ -829,8 +831,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 				} else if(event.getCause() == DamageCause.DROWNING) {
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						killPlayer(player);
+						
 						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " swam for too long ");										
 						
@@ -841,8 +844,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 					
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						killPlayer(player);
+					
 						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " had a bad diet ");										
 						
@@ -853,8 +857,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 					
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						killPlayer(player);
+						
 						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " was grilled ");										
 						
@@ -866,8 +871,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 					
 					
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						killPlayer(player);
+					
 						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " drank some spicy lava ");										
 						
@@ -877,8 +883,9 @@ public class MatchCommands implements CommandExecutor, Listener{
 					
 			
 					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-						killPlayer(player);
+						
 						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
 						event.setCancelled(true);											
 						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " died to the " + ChatColor.DARK_RED + "The Storm");																						
 					}					
@@ -966,11 +973,14 @@ public class MatchCommands implements CommandExecutor, Listener{
 		ItemStack[] itemstack = inventory.getContents();
 
 		Chest chest = (Chest) location.getBlock().getState();
-
+		sendServermessage("Chest Created");
 		if(location.getBlock().getState() instanceof Chest) {
-			for(int x = 9; x < 35; x++) {
-				if(itemstack[x] != null)
-					chest.getInventory().addItem(itemstack[x]);						
+			for(int x = 0; x < 26 ; x++) {
+				sendServermessage("Inventory scanned");
+				if(itemstack[x] != null) {
+					sendServermessage("Inventory transferred");
+					chest.getInventory().addItem(itemstack[x]);			
+				}
 			}			                                
 		}
 		return true;
