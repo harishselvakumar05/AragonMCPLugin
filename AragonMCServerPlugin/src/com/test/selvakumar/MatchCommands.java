@@ -27,18 +27,19 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
-import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.entity.EntityEvent;
 import org.bukkit.event.entity.FireworkExplodeEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -55,7 +56,6 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
-import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 
@@ -173,27 +173,23 @@ public class MatchCommands implements CommandExecutor, Listener{
 	public static ItemStack defaultSword = new ItemStack(Material.WOODEN_SWORD);
 	public static ItemMeta defaultSwordMeta = defaultSword.getItemMeta();
 
-	public static ItemStack defaultFirework = new ItemStack(Material.FIREWORK_ROCKET, 64);
+	public static ItemStack defaultFirework = new ItemStack(Material.FIREWORK_ROCKET, 25);
 	public static FireworkMeta defaultFireworkMeta = (FireworkMeta) defaultFirework.getItemMeta();
+	
+	public static ItemStack defaultGoldenApple = new ItemStack(Material.GOLDEN_APPLE, 2);
+	public static ItemMeta defaultGoldenAppleMeta = defaultGoldenApple.getItemMeta();
+	
+	public static ItemStack defaultGoldenCarrot = new ItemStack(Material.GOLDEN_CARROT, 1);
+	public static ItemMeta defaultGoldenCarrotMeta = defaultGoldenCarrot.getItemMeta();
 
 	private static Location center;
 	ArrayList<SpawnPosition> positions = new ArrayList<>();
 	public static ArrayList<Player> playersAlive = new ArrayList<>();
 	static ArrayList<Item> playerInventory = new ArrayList<>();
 	public static ArrayList<BoardPlayer> LeaderBoardPlayers = new ArrayList<>();
+	
+	static ArrayList<ItemStack> LootPool = new ArrayList<>();
 
-	Team solo1;
-	Team solo2;
-	Team solo3;
-	Team solo4;
-	Team solo5;
-	Team solo6;
-	Team solo7;
-	Team solo8;
-	Team solo9;
-	Team solo10;
-
-	ArrayList<Team> soloTeams = new ArrayList<>();
 
 	public MatchCommands(main main) {
 		MatchCommands.main = main;
@@ -227,6 +223,11 @@ public class MatchCommands implements CommandExecutor, Listener{
 			if (next.getPlayer().getDisplayName().equals(event.getPlayer().getDisplayName())){
 				itr.remove();
 			}					
+		}
+		
+		if(getStartGame()) {
+			setPlayersLeft(getPlayersLeft()-1);
+			playersAlive.remove(event.getPlayer());
 		}
 		refreshBoard();
 	}
@@ -301,16 +302,15 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 	public static void initializeItems() {
 
-		List<String> defaultCrossBowLore = new ArrayList<String>();
-		defaultCrossBowLore.add(ChatColor.BLUE + "Default Bow");	
-		defaultCrossbowMeta.setLore(defaultCrossBowLore);
+	
+		defaultCrossbowMeta.setDisplayName(ChatColor.WHITE + "Default Crossbow");
 		defaultCrossbowMeta.setUnbreakable(true);
 		defaultCrossbow.setItemMeta(defaultCrossbowMeta);		
 
 		List<String> defaultSwordLore = new ArrayList<String>();
-		defaultCrossBowLore.add(ChatColor.BLUE + "Just a normal sword");
-		defaultCrossbowMeta.setLore(defaultSwordLore);
-		defaultSwordMeta.setDisplayName(ChatColor.BLUE + "Default Sword");		
+		defaultSwordLore.add(ChatColor.WHITE + "Just a normal sword");
+		defaultSwordMeta.setLore(defaultSwordLore);
+		defaultSwordMeta.setDisplayName(ChatColor.WHITE + "Default Sword");		
 		defaultSwordMeta.setUnbreakable(true);
 		defaultSword.setItemMeta(defaultSwordMeta);
 
@@ -331,7 +331,27 @@ public class MatchCommands implements CommandExecutor, Listener{
 		defaultFireworkMeta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
 		defaultFireworkMeta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		defaultFirework.setItemMeta(defaultFireworkMeta);	 
-
+		
+		List<String> defaultGoldenAppleLore = new ArrayList<String>();
+		defaultGoldenAppleLore.add(" ");
+		defaultGoldenAppleLore.add(ChatColor.GREEN + "Instant heal by 2 hearts");
+		defaultGoldenAppleLore.add(ChatColor.GREEN + "No effects or saturation");
+		defaultGoldenAppleMeta.setLore(defaultGoldenAppleLore);
+		defaultGoldenAppleMeta.setDisplayName("Common Syringe");
+		defaultGoldenApple.setItemMeta(defaultGoldenAppleMeta);
+		
+		List<String> defaultGoldenCarrotLore = new ArrayList<String>();
+		defaultGoldenCarrotLore.add(" ");
+		defaultGoldenCarrotLore.add(ChatColor.GREEN + "Heals Health Fully");
+		defaultGoldenCarrotLore.add(ChatColor.GREEN + "No effects or saturation");
+		defaultGoldenCarrotMeta.setLore(defaultGoldenAppleLore);
+		defaultGoldenCarrotMeta.setDisplayName(ChatColor.ITALIC + " "  + ChatColor.BLUE + "Common Health Kit");
+		defaultGoldenCarrot.setItemMeta(defaultGoldenCarrotMeta);
+		
+		LootPool.add(defaultFirework);
+		LootPool.add(defaultGoldenApple);
+		LootPool.add(defaultGoldenCarrot);
+		
 	}
 
 
@@ -440,18 +460,6 @@ public class MatchCommands implements CommandExecutor, Listener{
 	}
 
 
-
-	public void initializeSoloTeams() {		
-		soloTeams.add(solo1);
-		soloTeams.add(solo2);
-		soloTeams.add(solo3);
-		soloTeams.add(solo4);
-		soloTeams.add(solo5);
-		soloTeams.add(solo6);
-		soloTeams.add(solo8);
-		soloTeams.add(solo9);
-		soloTeams.add(solo10);		
-	}
 
 
 
@@ -634,8 +642,8 @@ public class MatchCommands implements CommandExecutor, Listener{
 		p6 = new SpawnPosition(world, 8, 25, 96, true);
 		p7 = new SpawnPosition(world, -120, 25, 99, true);
 		p8 = new SpawnPosition(world, 43, 10, -107, true);
-		p9 = new SpawnPosition(world, 0, 69, 0, true);
-		p10 = new SpawnPosition(world, 0, 69, 0, false);	
+		p9 = new SpawnPosition(world, 12, 11, -91, true);
+		p10 = new SpawnPosition(world, -56, 14, -81, false);	
 
 		positions.add(p1);
 		positions.add(p2);
@@ -645,8 +653,8 @@ public class MatchCommands implements CommandExecutor, Listener{
 		positions.add(p6);
 		positions.add(p7);
 		positions.add(p8);
-		//positions.add(p9);
-		//positions.add(p10);
+		positions.add(p9);
+		positions.add(p10);
 		Collections.shuffle(positions);
 
 		int counter = 0;
@@ -713,20 +721,36 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 	@EventHandler
 	public void onPlayerInteract(PlayerInteractEvent event) {
-		if(getStartGame()) {
-			Player player =  event.getPlayer();
-			if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
-				if (event.getPlayer().getInventory().getItemInMainHand().getType() == Material.SNOWBALL) {
-					Vector velocity = event.getPlayer().getLocation().getDirection();
-					event.setCancelled(true);
-					Snowball snowball = player.launchProjectile(Snowball.class);
-					velocity.normalize();
-					snowball.setVelocity(velocity.multiply(5));
-					snowball.setFallDistance(0);		
-					snowball.setShooter(player);
+
+
+
+		final Player player =  event.getPlayer();
+
+
+		if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+			if (event.getPlayer().getInventory().getItemInMainHand().getType() == Material.GOLDEN_CARROT) {
+				if(player.getFoodLevel() == 20) {
+					player.setFoodLevel(19);
+					Bukkit.getServer().getScheduler().scheduleSyncDelayedTask(main, new Runnable() {
+						public void run() {
+							player.setFoodLevel(20);
+						}
+					}, 1L);
 				}
 			}
+
+
+			if (event.getPlayer().getInventory().getItemInMainHand().getType() == Material.SNOWBALL) {
+				Vector velocity = event.getPlayer().getLocation().getDirection();
+				event.setCancelled(true);
+				Snowball snowball = player.launchProjectile(Snowball.class);
+				velocity.normalize();
+				snowball.setVelocity(velocity.multiply(5));
+				snowball.setFallDistance(0);		
+				snowball.setShooter(player);
+			}
 		}
+
 	}
 
 
@@ -739,53 +763,138 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 	@EventHandler
 	public void onDamage(EntityDamageEvent event) {	
-		//if(getStartGame()){				
-		if (event instanceof EntityDamageByEntityEvent) {							
-			Player player = (Player) event.getEntity();
-			event = (EntityDamageByEntityEvent) event;
+		if(getStartGame()){				
+			if (event instanceof EntityDamageByEntityEvent) {							
+				Player player = (Player) event.getEntity();
+				event = (EntityDamageByEntityEvent) event;
 
-			if(event.getCause() == DamageCause.ENTITY_ATTACK || event.getCause() == DamageCause.ENTITY_SWEEP_ATTACK) {
+				
+				
+				if(event.getCause() == DamageCause.ENTITY_ATTACK || event.getCause() == DamageCause.ENTITY_SWEEP_ATTACK) {
 
-				Player p = (Player) ((EntityDamageByEntityEvent) event).getDamager();
-				if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+					Player p = (Player) ((EntityDamageByEntityEvent) event).getDamager();
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
 
-					setPlayersLeft(getPlayersLeft() - 1);
-					killPlayer(player);
-					for(BoardPlayer player1 : LeaderBoardPlayers) {
-						if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
-							player1.incrementScore();	
-							refreshBoard();
+						setPlayersLeft(getPlayersLeft() - 1);
+						killPlayer(player);
+						for(BoardPlayer player1 : LeaderBoardPlayers) {
+							if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
+								player1.incrementScore();	
+								refreshBoard();
+							}
 						}
+						event.setCancelled(true);					
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE +  " was hacked to oblivion by " + ChatColor.DARK_RED + p.getDisplayName());					
+
 					}
+					
+					
+					
+					
+				} else if(event.getCause() == DamageCause.PROJECTILE) {	
+
+					Arrow projectile = (Arrow)  ((EntityDamageByEntityEvent) event).getDamager();
+					Player p = (Player) projectile.getShooter();
+
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+
+						setPlayersLeft(getPlayersLeft() - 1);
+
+
+						for(BoardPlayer player1 : LeaderBoardPlayers) {
+							if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
+								player1.incrementScore();	
+								refreshBoard();
+							}
+						}
+						event.setCancelled(true);											
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " witnessed the good aim of " + ChatColor.DARK_RED + p.getDisplayName());										
+						killPlayer(player);
+					}
+					
+					
+					
+				} else if(event.getCause() == DamageCause.ENTITY_EXPLOSION) {
 					event.setCancelled(true);					
-					sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE +  " was hacked to oblivion by " + ChatColor.DARK_RED + p.getDisplayName());					
-
+				
 				}
-			} else if(event.getCause() == DamageCause.PROJECTILE) {	
-
-				Arrow projectile = (Arrow)  ((EntityDamageByEntityEvent) event).getDamager();
-				Player p = (Player) projectile.getShooter();
-
-				if ((player.getHealth() - event.getFinalDamage()) <= 0) {
-
-					setPlayersLeft(getPlayersLeft() - 1);
-
-
-					for(BoardPlayer player1 : LeaderBoardPlayers) {
-						if(player1.getPlayer().getDisplayName().equals(p.getDisplayName())) {
-							player1.incrementScore();	
-							refreshBoard();
-						}
+				
+				} else if(event.getCause() == DamageCause.FALL) {
+					
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+						
+						setPlayersLeft(getPlayersLeft() - 1);
+						event.setCancelled(true);											
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " forgot they couldn't fly ");										
+						killPlayer(player);
+						
 					}
-					event.setCancelled(true);											
-					sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " witnessed the good aim of " + ChatColor.DARK_RED + p.getDisplayName());										
-					killPlayer(player);
-				}					
-			} else if(event.getCause() == DamageCause.ENTITY_EXPLOSION) {
-				event.setCancelled(true);					
-			}				
+					
+				} else if(event.getCause() == DamageCause.DROWNING) {
+					
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+						
+						setPlayersLeft(getPlayersLeft() - 1);
+						event.setCancelled(true);											
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " swam for too long ");										
+						killPlayer(player);
+						
+					}
+					
+				} else if(event.getCause() == DamageCause.STARVATION) {
+					
+					
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+						
+						setPlayersLeft(getPlayersLeft() - 1);
+						event.setCancelled(true);											
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " had a bad diet ");										
+						killPlayer(player);
+						
+					}
+					
+				} else if(event.getCause() == DamageCause.FIRE) {
+					
+					
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+						
+						setPlayersLeft(getPlayersLeft() - 1);
+						event.setCancelled(true);											
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " was grilled ");										
+						killPlayer(player);
+						
+					}
+					
+					
+				} else if(event.getCause() == DamageCause.LAVA) {
+					
+					
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+						
+						setPlayersLeft(getPlayersLeft() - 1);
+						event.setCancelled(true);											
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " drank some spicy lava ");										
+						killPlayer(player);
+						
+					}
+				} else if(event.getCause() == DamageCause.SUFFOCATION) {
+					
+			
+					if ((player.getHealth() - event.getFinalDamage()) <= 0) {
+						
+						setPlayersLeft(getPlayersLeft() - 1);
+						event.setCancelled(true);											
+						sendServermessage(ChatColor.BLUE + player.getDisplayName() + ChatColor.WHITE + " died to the " + ChatColor.DARK_RED + "The Storm");										
+						killPlayer(player);
+						
+					}
+					
+				}
+				
+				
+			
 		}
-
+		
 		/*
 			Player player = (Player) event.getEntity();	
 
@@ -883,9 +992,10 @@ public class MatchCommands implements CommandExecutor, Listener{
 		Chest chest = (Chest) location.getBlock().getState();
 
 		if(location.getBlock().getState() instanceof Chest) {
-			for(int x = 0; x < 27; x++) {
+			for(int x = 9; x < 35; x++) {
 				if(itemstack[x] != null)
-					chest.getInventory().addItem(itemstack[x]);								
+					chest.getInventory().addItem(itemstack[x]);		
+				
 			}			                                
 		}
 		return true;
@@ -917,7 +1027,56 @@ public class MatchCommands implements CommandExecutor, Listener{
 	}
 
 
+	public void setHealthPlayer(Player player, int health) {
+		
+	}
+	
+	@EventHandler
+	public void onItemConsume(PlayerItemConsumeEvent event) {
+	    Player player = event.getPlayer();
 
+   
+        
+		if(event.getItem().getType() == Material.GOLDEN_APPLE) {
+			if(player.getHealth() + 4 <= 20.0) {
+			player.setHealth(player.getHealth() + 4);
+			
+			
+			PlayerInventory inventory = player.getInventory();
+			int curr = inventory.getHeldItemSlot();
+			ItemStack Item = player.getInventory().getItem(curr);			
+			Item.setAmount(Item.getAmount()-1);					
+			player.getInventory().setItem(curr, Item);
+			
+			event.setCancelled(true);
+			
+			} else {
+				player.setHealth(20);
+				
+				PlayerInventory inventory = player.getInventory();
+				int curr = inventory.getHeldItemSlot();
+				ItemStack Item = player.getInventory().getItem(curr);			
+				Item.setAmount(Item.getAmount()-1);					
+				player.getInventory().setItem(curr, Item);
+				
+				event.setCancelled(true);
+			}			
+		} else if(event.getItem().getType() == Material.GOLDEN_CARROT) {
+			double x = 20.0 -  player.getHealth();
+			player.setHealth(player.getHealth() + x);
+		
+		
+			
+			PlayerInventory inventory = player.getInventory();
+			int curr = inventory.getHeldItemSlot();
+			ItemStack Item = player.getInventory().getItem(curr);			
+			Item.setAmount(Item.getAmount()-1);					
+			player.getInventory().setItem(curr, Item);
+			
+			event.setCancelled(true);
+			
+		}
+	}
 
 
 
@@ -1303,26 +1462,40 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 
-
-
-
-	public static void spawnCarePackageR4() {
-
-		cp1r4.getBlock().setType(Material.CHEST);
-		world.strikeLightningEffect(cp1r4);
-
-		Chest chest = (Chest) cp1r4.getBlock().getState();
-		ItemStack item = new ItemStack(Material.APPLE, 3);
-
-		if(cp1r4.getBlock().getState() instanceof Chest) {
-
-			chest.getInventory().addItem(item);		
-
+	
+	@EventHandler 
+	public void onInventoryClick(InventoryClickEvent event) {
+		Player player = (Player) event.getWhoClicked();
+		Inventory inventory1 = event.getClickedInventory();
+		int totalamount = 0;
+		
+		
+		PlayerInventory inventory = player.getInventory();
+		ItemStack[] itemstack = inventory.getContents();
+		
+		if(!(inventory1.getType() == InventoryType.PLAYER)) {
+		
+			
+		for(int x = 0; x < 9; x++) {
+			if(itemstack[x] != null) {
+			if(itemstack[x].getType() == Material.CROSSBOW) {
+				totalamount++;
+			}	
+			}
 		}
-
-		world.strikeLightningEffect(cp1r4);		
-		sendServermessage(ChatColor.GOLD, "Round 4 Care Packages have spawned");		
+		
+		if(event.getCurrentItem().getType() == Material.CROSSBOW) {
+			if(totalamount == 2) {
+				player.sendMessage(ChatColor.RED + "Cannot hold more than 2 crossbows");
+				event.setCancelled(true);
+			}
+										
+		}
+		}
+		
+	//	event.setCancelled(true);
 	}
+
 
 
 
@@ -1345,23 +1518,12 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 	public static void fillChests() {
-
 		for (Chunk c : world.getLoadedChunks()) {
-
 			for (BlockState b : c.getTileEntities()) {
-
 				if (b instanceof Chest) {
-					Chest chest = (Chest) b;
-					Inventory inventory = chest.getBlockInventory();   
-					Material[] randomItens = {Material.AIR, Material.APPLE, Material.ENDER_PEARL, Material.STONE_SWORD, Material.WOODEN_AXE, Material.ARROW, Material.BOW };
-
-					for (int i = 0; i < chest.getInventory().getSize(); i++) {
-						Random rand = new Random();
-						int max = 9;
-						for (int amountOfItems = 0; amountOfItems < max; amountOfItems++) {
-							inventory.addItem(new ItemStack(randomItens[rand.nextInt(randomItens.length)]));
-						}
-					}
+					Chest chest = (Chest) b;				
+					for(int x = 0; x < LootPool.size(); x++)				
+							chest.getBlockInventory().addItem(LootPool.get(x));					
 				}
 			}
 		}
@@ -1421,8 +1583,6 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 
-
-
 	public static void setBorder( int x, int time, float damage) {
 		border.setCenter(center);
 		if (time == 0) border.setSize(x);
@@ -1436,16 +1596,13 @@ public class MatchCommands implements CommandExecutor, Listener{
 
 
 
-
-
-
 	public static void cycle_one() {
 		border.setDamageBuffer(0);
 		border.setWarningDistance(10);
 		border.setDamageAmount(0.01);
 		setBorder(border1, 0, 1);	
 		border.setCenter(center);
-		// First Circle, after 60 seconds, damage of 0.05 ( total elapsed time is 100 )
+		
 		setRound1(new BukkitRunnable() {
 			@Override
 			public void run() {
@@ -1457,7 +1614,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 			}
 		}.runTaskLater(main, 20 * Time1));
 
-		// Second Circle, 45 seconds after closing of first circle, damage of 0.25 ( total elapsed time is 175 )
+		
 		setRound2(new BukkitRunnable() {
 			@Override
 			public void run() {
@@ -1469,7 +1626,7 @@ public class MatchCommands implements CommandExecutor, Listener{
 			}
 		}.runTaskLater(main, 20 * (Time1 + RingTime1 + Time2)));
 
-		// Third Circle, 45 seconds after closing of second circle, damage of 0.3 ( total elapsed time is 245 
+		
 		setRound3(new BukkitRunnable() {
 			@Override
 			public void run() {
@@ -1481,19 +1638,18 @@ public class MatchCommands implements CommandExecutor, Listener{
 			}
 		}.runTaskLater(main, 20 * (Time1 + RingTime1 + Time2 + RingTime2 + Time3)));
 
-		// Fourth Circle, 30 seconds after closing of third circle, damage of 0.5 ( total elapsed time is 285 )
+		
 		setRound4(new BukkitRunnable() {
 			@Override
 			public void run() {
 				setBorder(border5, RingTime4, 0.5f);
-				Location location = border.getCenter();
-				spawnCarePackageR4();
+				Location location = border.getCenter();				
 				world.strikeLightningEffect(location);
 				sendServerTitle("", "Ring Movement Has Started", 3, 1, 'c' );
 			}
 		}.runTaskLater(main, 20 * (Time1 + RingTime1 + Time2 + RingTime2 + Time3 + RingTime3 + Time4)));
 
-		// Final Circle, 30 seconds after fourth circle, damage of 1, 
+		
 		setRound5(new BukkitRunnable() {
 			@Override
 			public void run() {
