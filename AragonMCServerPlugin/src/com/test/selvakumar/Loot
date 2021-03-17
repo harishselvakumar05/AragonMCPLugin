@@ -1,0 +1,22 @@
+package com.test.selvakumar;
+
+import org.bukkit.inventory.ItemStack;
+
+public class Loot {
+	ItemStack e;
+	double p;
+	
+	public Loot(ItemStack e, double p) {
+		this.e = e;
+		this.p = p;
+	}
+	
+	public double getProbability() {
+		return this.p;
+	}
+	
+	public ItemStack getItem() {
+		return this.e;
+	}
+	
+}
