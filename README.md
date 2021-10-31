@@ -1,6 +1,7 @@
 # AragonMCPLugin
 Our own litte fun mini game written by (mostly) harishlikespi and KazooKidFTW (not really) for our custom map of our highschool
 
+Note to past self: this is absolutely perfect r/programminghorror content
 
 # Usage
 
