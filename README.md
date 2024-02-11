@@ -1,7 +1,7 @@
+2024 update: please don't read the code I was cookin something up in sophomore year (but it worked)
+
 # AragonMCPLugin
 Our own litte fun mini game written by (mostly) harishlikespi and KazooKidFTW (not really) for our custom map of our highschool (viewer discretion advised, speedran in 3 days for school mc server so its pretty disgusting)
-
-
 
 # Usage
 
